@@ -1,5 +1,5 @@
 {
-  "name": "week-12",
+  "name": "zombie_transl_api",
   "version": "1.0.0",
   "description": "*where \"stuff\" is probably best described as \"streams\"* *yes, I could have just said \"streams\", but it's too late now*",
   "main": "read.js",
@@ -16,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/CSCI-E32/Week-12/issues"
   },
-  "homepage": "https://github.com/CSCI-E32/Week-12#readme"
+  "homepage": "https://github.com/CSCI-E32/Week-12#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "markdown": "^0.5.0"
+  }
 }
