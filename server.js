@@ -1,10 +1,12 @@
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
+var stream = require('stream');
 
 var logger = require('./logger');
 var zomTrans = require('./zombifyTransformer');
 var unzomTrans = require('./unzombifyTransformer');
+var jsonTrans = require('./jsonify');
 
 var markdownTrans = require('./markdownTransformer');
 
@@ -12,38 +14,43 @@ var handleRequest = function(request, response){
 
     var purl = url.parse(request.url, true);
 
-    if(request.url === '/favicon.ico'){
-        response.writeHead(200);
-        response.end();
-        return;
-    } else if(purl.pathname === '/zombify'){
+
+    if(purl.query.q !== undefined && purl.query.q.length > 1000) {
+        response.writeHead(414);
+        response.end(JSON.stringify({'status': 414, 'message' : 'input is over 1000 characters long'}));
+
+    }
+    else if(purl.pathname === '/zombify'){
         response.writeHead(200, {'Content-Type': 'application/json'});
-        var str = purl.query.string;
-        str = 'hello';
+        var s = new stream.Readable();
+        s.push(purl.query.q);
+        s.push(null);
 
-        str.pipe(zomTrans())
-           .pipe(response);
+        s.pipe(zomTrans())
+         .pipe(jsonTrans())
+         .pipe(response);
 
-        str.on("finished", function(){
+        s.on("finished", function(){
             response.end();
         });
 
     } else if(purl.pathname === '/unzombify'){
         response.writeHead(200, {'Content-Type': 'application/json'});
-        var query = purl.query.string;
+        var s = new stream.Readable();
+        s.push(purl.query.q);
+        s.push(null);
 
+        s.pipe(unzomTrans())
+         .pipe(jsonTrans())
+         .pipe(response);
 
-        query.pipe(unzomTrans())
-             .pipe(response);
-
-        query.on("finished", function(){
+        s.on("finished", function(){
             response.end();
         });
 
-
     } else if(request.url === '/'){
         response.writeHead(200, {'Content-Type': 'text/html'});
-        var file = fs.createReadStream('sample.md');
+        var file = fs.createReadStream('readme.md');
 
         file.pipe(markdownTrans()).pipe(response);
 
@@ -53,7 +60,7 @@ var handleRequest = function(request, response){
 
     } else {
         response.writeHead(404);
-        response.end("404 Not Found");
+        response.end(JSON.stringify({'status': 404, 'message' : 'route not found'}));
     }
 
 
